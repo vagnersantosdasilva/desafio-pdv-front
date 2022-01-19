@@ -9,7 +9,7 @@ const router = new VueRouter({
   routes,
   mode: 'history',
   base: process.env.BASE_URL,
-  routes
+
 })
 
 router.beforeEach((to, from, next) => {
@@ -20,8 +20,8 @@ router.beforeEach((to, from, next) => {
     // If the user is already logged in
     if (authed) {
       // Redirect to the home page instead
-      next({ path: '/' })          
-    } else {          
+      next({ path: '/' })
+    } else {
       // Continue to the login page
       next()
     }
@@ -45,7 +45,7 @@ router.beforeEach((to, from, next) => {
     }
     if (permited.length > 0) {
       next()
-    } else {      
+    } else {
       next(false)
     }
   }

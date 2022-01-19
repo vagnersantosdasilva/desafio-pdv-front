@@ -211,7 +211,7 @@ export default {
       <p>
           Quis consectetur accusantium quia consequuntur hic
           soluta. Minus nisi illum ab architecto exercitationem?
-      </p>    
+      </p>
       `;
     },
 
@@ -273,7 +273,7 @@ export default {
     async getVendaById(idVenda) {
       this.changeLoading(true);
       await this.$axios
-        .get(`empresa/${this.novaVenda.idEmpresa}/vendas/${idVenda}`)
+        .get(`empresa/${this.novaVenda.idEmpresa}/venda/${idVenda}`)
         .then((response) => {
           this.novaVenda = Object.assign({}, response.data);
         })
