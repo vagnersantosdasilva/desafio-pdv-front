@@ -283,8 +283,7 @@ export default {
 
 
     async listEmpresas(page) {
-        this.isBusy = true;
-        console.log('page',page)
+        this.changeLoading(true);
         await this.$axios
             .get(`empresa/?page=${ page }` )
             .then((response) => {
@@ -295,7 +294,7 @@ export default {
             .catch(() => {
               this.$toasted.error("Falha ao listar empresas!");
             });
-        this.isBusy = false;
+      this.changeLoading(false);
     },
 
 
@@ -304,7 +303,7 @@ export default {
         this.editMode = true;
         this.rowSelected = Object.assign({}, this.aplicarMascaras(record[0]));
         this.empresa = Object.assign({},this.aplicarMascaras(record[0]));
-        console.log(this.empresa);
+
       }
     },
 

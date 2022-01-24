@@ -86,7 +86,6 @@
             <b-card >
               <b-form-group label="Produto">
                 <b-form-input
-
                     type="text"
                     ref="produto"
                     v-model = "produto.produto"
@@ -105,20 +104,25 @@
                 />
               </b-form-group>
 
-              <b-form-group label="Valor">
-                <b-form-input
-                    v-model="produto.valorBase"
-                    autocomplete="false"
-                    class="mb-2"
-                    @input="formataValor"
-                />
-              </b-form-group>
+              <b-form-group  label="Valor"  >
+                <b-input-group prepend="R$" >
 
-              <b-row class="mt-2 ml-1 mr-1" >
+                  <b-form-input
+                      v-model="produto.valorBase"
+                      autocomplete="false"
+                      @input="formataValor"
+                      size="md"
+
+                  />
+                </b-input-group>
+              </b-form-group>
+              <hr/>
+              <b-row class="mt-2 ml-1 mr-1 row-cols-md-12" >
 
                   <b-form-group
                       label="Imagem de Produto"
                       label-for="dropzone1"
+
                   >
                     <div  v-if="isImagemProdutoCarregado">
                       <fieldset class="fieldset-border" >
@@ -135,9 +139,8 @@
                       </fieldset>
                     </div>
                     <div v-else>
-                      <b-form>
-                        <b-form-group
-                        >
+                      <b-form >
+                        <fieldset class="fieldset-border">
                           <vue-dropzone
                               class="col-12"
                               id="dropzone1"
@@ -151,7 +154,7 @@
                               <h6>Arraste o arquivo jpg ou clique aqui para selecionar</h6>
                             </div>
                           </vue-dropzone>
-                        </b-form-group>
+                        </fieldset>
                       </b-form>
                     </div>
                   </b-form-group>
@@ -269,8 +272,8 @@ export default {
           };
         },
       },
-
       isSelected:false,
+      uploadFail:false,
     };
   },
 
@@ -283,7 +286,7 @@ export default {
       this.cleanForm();
       if (novo) {
         this.cleanForm();
-        this.listProduto(novo, 1);
+        this.listProduto(novo, 0);
       }
       else{
         this.cancelar();
@@ -350,19 +353,37 @@ export default {
     async salvar() {
       if (this.idEmpresa) {
         this.produto = Object.assign({}, this.prepareProduto(this.produto));
-        this.changeLoading(true);
-        await this.$axios
-            .post(`empresa/${this.idEmpresa}/produto`, this.produto)
-            .then(() => {
-              this.$toasted.success("produto Salvo com sucesso!");
-              this.listProduto(this.idEmpresa,1)
-              this.cancelar();
-            })
-            .catch(() => {
-              this.$toasted.error("Falha ao salvar Produto!");
-            });
-        this.changeLoading(false);
-      }else{
+
+        if (!this.produto.idProduto) {
+          this.changeLoading(true);
+          await this.$axios
+              .post(`empresa/${this.idEmpresa}/produto`, this.produto)
+              .then(() => {
+                this.$toasted.success("Produto Salvo com sucesso!");
+                this.cleanForm();
+                this.currentPage=1;
+              })
+              .catch(() => {
+                this.$toasted.error("Falha ao salvar Produto!");
+              });
+          this.changeLoading(false);
+        }
+        else{
+          this.changeLoading(true);
+          await this.$axios
+              .put(`empresa/${this.idEmpresa}/produto/${this.produto.idProduto}`, this.produto)
+              .then(() => {
+                this.$toasted.success("Produto Atualizado com sucesso!");
+                this.cleanForm();
+                this.currentPage=1;
+              })
+              .catch(() => {
+                this.$toasted.error("Falha ao atualizar Produto!");
+              });
+          this.changeLoading(false);
+        }
+      }
+      else{
         this.$toasted.info("Nenhuma empresa selecionada!");
       }
     },
@@ -371,7 +392,7 @@ export default {
     async listProduto(idEmpresa,page) {
       this.changeLoading(true);
       await this.$axios
-          .get(`empresa/${idEmpresa}/produto`, {page})
+          .get(`empresa/${idEmpresa}/produto/?page=${page}` )
           .then((response) => {
             this.produtoResponse = Object.assign({}, response.data);
             this.items = Object.assign([], response.data.content);
@@ -412,7 +433,6 @@ export default {
 
     cancelar() {
       if (this.isSelected){
-        console.log(this.rowSelected);
         this.produto = Object.assign({},this.rowSelected);
       }
       else {
@@ -429,14 +449,17 @@ export default {
 
     // Métodos do dropzone
     afterUploadComplete(response) {
+      this.changeLoading(true)
       if (response.status == "success") {
         let base64Bruto = response.dataURL;
         let base64Liq = base64Bruto.split(",");
         this.produto.imagemProduto = base64Liq[1];
-        console.log(this.produto);
+        this.uploadFail=false;
+
       } else {
-        this.mask.bandeiraDescription = "Imagem inválida!";
+        this.uploadFail=true;
       }
+      this.changeLoading(false)
     },
 
     convertValor(produto) {
