@@ -96,7 +96,7 @@
                     autocomplete="false"
                     lazy-formatter
                     class="mb-2"
-                    v-mask="'(##) #####-####'"
+                    v-mask="'(##) ####-####'"
 
                   />
                 </b-col>
@@ -305,18 +305,25 @@ export default {
     cleanForm() {
       this.editMode = false;
       this.empresa = Object.assign({},this.empresaReset);
+      this.rowSelected={};
     },
 
     novo() {
-      this.cancelar();
+      this.cleanForm();
       setTimeout(() => {
         this.$refs.cnpj.focus();
       });
     },
 
     cancelar() {
-      this.rowSelected={};
-      this.cleanForm();
+      if (this.empresa.idEmpresa){
+        this.empresa=Object.assign({},this.rowSelected);
+      }
+      else{
+        this.rowSelected={};
+        this.cleanForm();
+      }
+
     },
 
     cnpjMask(cnpjNovo){

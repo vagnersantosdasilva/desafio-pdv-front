@@ -3,7 +3,7 @@
     <Layout />
     <div class="page-container">
       <PageHeader
-          title="Cadastro de Empresa"
+          title="Cadastro de Clientes"
           helpTitle="Cadastro de Clientes"
           :helpText="helpText"
       />
@@ -18,6 +18,7 @@
                     id="empresa"
                     v-model="idEmpresa"
                     autocomplete="off"
+
                 >
                   <option :value="null"></option>
                   <option
@@ -110,7 +111,7 @@
                     autocomplete="false"
                     lazy-formatter
                     class="mb-2"
-                    v-mask="'(##) #####-####'"
+                    v-mask="'(##) ####-####'"
 
                 />
               </b-form-group>
@@ -161,7 +162,7 @@ export default {
 
   data() {
     return {
-
+      formDisabled:false,
       idEmpresa:null,
 
       fields: [
@@ -181,16 +182,18 @@ export default {
         cpf:null,
         nome:null,
         telefone:null,
+        idEmpresa:null,
       },
 
       clienteReset:{
         cpf:null,
         nome:null,
         telefone:null,
+        idEmpresa:null,
       },
 
-      clienteResponse:{contetn:[]},
-      empresaResponse:{contetn:[]},
+      clienteResponse:{content:[]},
+      empresaResponse:{content:[]},
 
 
     };
@@ -202,11 +205,15 @@ export default {
     },
 
     idEmpresa:function(novo){
+      this.cleanForm();
       if (novo) {
         this.listCliente(novo, 1);
       }
       else{
         this.cancelar();
+        this.clienteResponse = {content:[],totalElements:0};
+        this.items=[];
+
       }
     }
   },
@@ -249,7 +256,7 @@ export default {
     }),
 
     async listEmpresas() {
-      this.changeLoading(true);
+
       await this.$axios
           .get("dominios/empresa")
           .then((response) => {
@@ -258,28 +265,26 @@ export default {
           .catch(() => {
             this.$toasted.error("Falha ao listar empresas!");
           });
-      this.changeLoading(false);
+
     },
 
     removerMascaras(e){
-      if (e) {
-        e.cpf = e.cpf.replace(/[^a-zA-Z0-9]/g, "");
-        e.telefone = e.telefone.replace(/[^a-zA-Z0-9]/g, "");
-      }
+      if (e.cpf) e.cpf = e.cpf.replace(/[^a-zA-Z0-9]/g, "");
+      if (e.telefone)  e.telefone = e.telefone.replace(/[^a-zA-Z0-9]/g, "");
       return e;
     },
-
 
     async salvar() {
       if (this.idEmpresa) {
         this.cliente = Object.assign({}, this.removerMascaras(this.cliente));
+        this.cliente.idEmpresa = this.idEmpresa;
         this.changeLoading(true);
         await this.$axios
-            .post(`empresa/${this.idEmpresa}/cliente`, this.empresa)
+            .post(`empresa/${this.idEmpresa}/cliente`, this.cliente)
             .then(() => {
               this.$toasted.success("Cliente Salvo com sucesso!");
-              this.listCliente(this.idEmpresa,1)
-              this.cancelar();
+              this.listCliente(this.idEmpresa,1);
+              this.cleanForm();
             })
             .catch(() => {
               this.$toasted.error("Falha ao salvar Empresa!");
@@ -292,20 +297,28 @@ export default {
 
 
     async listCliente(idEmpresa,page) {
-      await this.$axios
-          .get(`empresa/${idEmpresa}/cliente`, {page})
-          .then((response) => {
-            this.clienteResponse = Object.assign({}, response.data);
-            this.items = Object.assign([], response.data.content);
-          })
-          .catch(() => {
-            this.$toasted.error("Falha ao listar clientes!");
-          });
+      if (idEmpresa) {
+        this.changeLoading(true);
+        await this.$axios
+            .get(`empresa/${idEmpresa}/cliente`, {page})
+            .then((response) => {
+              this.clienteResponse = Object.assign({}, response.data);
+              this.items = Object.assign([], response.data.content);
+            })
+            .catch(() => {
+              this.$toasted.error("Falha ao listar clientes!");
+            });
+        this.changeLoading(false);
+      }
+      else{
+        this.$toasted.info("É necessário selecionar uma empresa!");
+      }
     },
 
 
     setRowSelected(record) {
       if (record.length > 0) {
+        this.formDisabled = true;
         this.editMode = false;
         this.cliente.telefone = null;
         this.rowSelected.telefone = null;
@@ -317,9 +330,6 @@ export default {
     aplicarMascaras(e){
       e.cpf = this.cpfMask(e.cpf);
       e.telefone = this.telefoneMask(e.telefone)
-      /*if (e.telefone.length>10)
-        e.telefone = this.telefoneMask(e.telefone)
-      else e.telefone = this.celularMask(e.telefone)*/
       return e;
     },
 
@@ -327,20 +337,26 @@ export default {
       this.editMode = false;
       this.cliente = this.removerMascaras(this.cliente);
       this.cliente = Object.assign({},this.clienteReset);
+      this.rowSelected = {};
     },
 
     novo() {
-      this.cancelar();
+      this.cleanForm();
       setTimeout(() => {
-        this.$refs.cpf.focus();
+        this.$refs.empresa.focus();
       });
     },
 
     cancelar() {
-      this.rowSelected={};
-      setTimeout(() => {
-        this.cleanForm();
-      });
+      if (this.cliente.idCliente){
+        this.cliente = Object.assign({},this.rowSelected);
+      }
+      else{
+        this.rowSelected={};
+        setTimeout(() => {
+          this.cleanForm();
+        });
+      }
 
     },
 

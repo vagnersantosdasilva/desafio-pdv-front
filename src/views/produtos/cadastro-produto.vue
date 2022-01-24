@@ -226,7 +226,8 @@ export default {
         descricao:null,
         valorBase:null,
         imagemProduto:null,
-        valor:null
+        valor:null,
+        idEmpresa:null,
       },
 
       produtoReset:{
@@ -235,6 +236,7 @@ export default {
         valorBase:null,
         imagemProduto:null,
         valor:null,
+        idEmpresa:null,
       },
 
       produtoResponse:{contetn:[]},
@@ -268,7 +270,7 @@ export default {
         },
       },
 
-
+      isSelected:false,
     };
   },
 
@@ -278,12 +280,15 @@ export default {
     },
 
     idEmpresa:function(novo){
+      this.cleanForm();
       if (novo) {
         this.cleanForm();
         this.listProduto(novo, 1);
       }
       else{
         this.cancelar();
+        this.produtoResponse = {content:[],totalElements:0};
+        this.items=[];
       }
     }
   },
@@ -379,13 +384,15 @@ export default {
 
 
     setRowSelected(record) {
-      setTimeout(()=>{
-        this.rowSelected = {...this.produtoReset};
-      })
+
       if (record.length > 0) {
         this.editMode = false;
         this.rowSelected = Object.assign({},this.convertValor(record[0]))
         this.produto = Object.assign({},this.rowSelected);
+        this.isSelected=true;
+      }
+      else {
+        this.isSelected=false;
       }
     },
 
@@ -393,21 +400,27 @@ export default {
     cleanForm() {
        this.rowSelected = Object.assign({},this.produtoReset);
        this.produto = Object.assign({},this.produtoReset);
+       this.isSelected=false;
     },
 
     novo() {
-      this.cancelar();
+      this.cleanForm();
       setTimeout(() => {
-        this.$refs.produto.focus();
+        this.$refs.empresa.focus();
       });
     },
 
     cancelar() {
-      this.rowSelected={};
-      setTimeout(() => {
-        this.cleanForm();
-      });
-
+      if (this.isSelected){
+        console.log(this.rowSelected);
+        this.produto = Object.assign({},this.rowSelected);
+      }
+      else {
+        this.rowSelected = {};
+        setTimeout(() => {
+          this.cleanForm();
+        });
+      }
     },
 
     viewDropZone(){
