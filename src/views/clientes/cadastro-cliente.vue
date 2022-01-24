@@ -207,7 +207,7 @@ export default {
     idEmpresa:function(novo){
       this.cleanForm();
       if (novo) {
-        this.listCliente(novo, 1);
+        this.listCliente(novo, 0);
       }
       else{
         this.cancelar();
@@ -278,19 +278,37 @@ export default {
       if (this.idEmpresa) {
         this.cliente = Object.assign({}, this.removerMascaras(this.cliente));
         this.cliente.idEmpresa = this.idEmpresa;
-        this.changeLoading(true);
-        await this.$axios
-            .post(`empresa/${this.idEmpresa}/cliente`, this.cliente)
-            .then(() => {
-              this.$toasted.success("Cliente Salvo com sucesso!");
-              this.listCliente(this.idEmpresa,1);
-              this.cleanForm();
-            })
-            .catch(() => {
-              this.$toasted.error("Falha ao salvar Empresa!");
-            });
-        this.changeLoading(false);
-      }else{
+        if (!this.cliente.idCliente) {
+          this.changeLoading(true);
+          await this.$axios
+              .post(`empresa/${this.idEmpresa}/cliente`, this.cliente)
+              .then(() => {
+                this.$toasted.success("Cliente Salvo com sucesso!");
+                this.cleanForm();
+                this.currentPage=1;
+              })
+              .catch(() => {
+                this.$toasted.error("Falha ao salvar Empresa!");
+              });
+          this.changeLoading(false);
+        }
+        else{
+          this.changeLoading(true);
+          await this.$axios
+              .put(`empresa/${this.idEmpresa}/cliente/${this.cliente.idCliente}`, this.cliente)
+              .then(() => {
+                this.$toasted.success("Cliente Salvo com sucesso!");
+                this.cleanForm();
+                this.currentPage=1;
+              })
+              .catch(() => {
+                this.$toasted.error("Falha ao salvar Empresa!");
+              });
+          this.changeLoading(false);
+        }
+
+      }
+      else {
         this.$toasted.info("Nenhuma empresa selecionada!");
       }
     },
@@ -300,7 +318,7 @@ export default {
       if (idEmpresa) {
         this.changeLoading(true);
         await this.$axios
-            .get(`empresa/${idEmpresa}/cliente`, {page})
+            .get(`empresa/${idEmpresa}/cliente/?page=${ page }`)
             .then((response) => {
               this.clienteResponse = Object.assign({}, response.data);
               this.items = Object.assign([], response.data.content);
@@ -324,6 +342,7 @@ export default {
         this.rowSelected.telefone = null;
         this.cliente = Object.assign({},this.aplicarMascaras(record[0]))
         this.rowSelected = Object.assign({},this.aplicarMascaras(record[0]))
+
       }
     },
 

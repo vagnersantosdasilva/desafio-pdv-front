@@ -154,7 +154,7 @@ export default {
   },
 
   async mounted() {
-    await this.listEmpresas(1);
+    await this.listEmpresas(0);
   },
 
   data() {
@@ -250,18 +250,35 @@ export default {
 
     async salvar() {
       this.empresa = Object.assign({}, this.removerMascaras(this.empresa));
-      this.changeLoading(true);
-      await this.$axios
-          .post('empresa', this.empresa)
-          .then(() => {
-            this.$toasted.success("Empresa salva com sucesso!");
-            this.listEmpresas();
-            this.cancelar();
-          })
-          .catch(() => {
-            this.$toasted.error("Falha ao salvar Empresa!");
-          });
-      this.changeLoading(false);
+      if (!this.empresa.idEmpresa){
+          this.changeLoading(true);
+          await this.$axios
+              .post('empresa', this.empresa)
+              .then(() => {
+                this.$toasted.success("Empresa salva com sucesso!");
+                this.cleanForm()
+                this.currentPage=1;
+              })
+              .catch(() => {
+                this.$toasted.error("Falha ao salvar Empresa!");
+              });
+          this.changeLoading(false);
+      }
+      else{
+        this.changeLoading(true);
+        await this.$axios
+            .put(`empresa/${this.empresa.idEmpresa}`, this.empresa)
+            .then(() => {
+              this.$toasted.success("Empresa atualizada com sucesso!");
+              this.cleanForm();
+              this.currentPage=1;
+
+            })
+            .catch(() => {
+              this.$toasted.error("Falha ao atualizar Empresa!");
+            });
+        this.changeLoading(false);
+      }
     },
 
 
@@ -269,7 +286,7 @@ export default {
         this.isBusy = true;
         console.log('page',page)
         await this.$axios
-            .get("empresa", { params: page})
+            .get(`empresa/?page=${ page }` )
             .then((response) => {
               console.log(response.data);
               this.empresaResponse = Object.assign({}, response.data);
@@ -285,18 +302,17 @@ export default {
     setRowSelected(record) {
       if (record.length > 0) {
         this.editMode = true;
-        this.rowSelected = Object.assign({}, record[0]);
-        this.empresa = Object.assign({},record[0])
-        this.empresa = Object.assign(this.aplicarMascaras(this.empresa))
-        this.rowSelected = Object.assign(this.aplicarMascaras(this.rowSelected))
+        this.rowSelected = Object.assign({}, this.aplicarMascaras(record[0]));
+        this.empresa = Object.assign({},this.aplicarMascaras(record[0]));
+        console.log(this.empresa);
       }
     },
 
     aplicarMascaras(e){
-      e.cnpj = this.cnpjMask(e.cnpj);
-      if (e.telefone.length>10)
-        e.telefone = this.telefoneMask(e.telefone)
-      else e.telefone = this.celularMask(e.telefone)
+      if (e.cnpj) e.cnpj = this.cnpjMask(e.cnpj);
+      if (e.telefone) e.telefone = this.telefoneMask(e.telefone);
+
+
       return e;
     },
 
