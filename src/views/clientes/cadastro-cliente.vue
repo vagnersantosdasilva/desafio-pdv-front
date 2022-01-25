@@ -162,21 +162,18 @@ export default {
 
   data() {
     return {
-      formDisabled:false,
       idEmpresa:null,
 
       fields: [
         { key: "nome", label: "Nome" },
       ],
       items:[],
-      isBusy: false,
       currentPage: 1,
       perPage: 5,
       sortBy: "nome",
       sortDesc: false,
 
       rowSelected:{},
-      clientes:[],
 
       cliente:{
         cpf:null,
@@ -336,7 +333,6 @@ export default {
 
     setRowSelected(record) {
       if (record.length > 0) {
-        this.formDisabled = true;
         this.editMode = false;
         this.cliente.telefone = null;
         this.rowSelected.telefone = null;

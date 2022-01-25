@@ -287,7 +287,6 @@ export default {
         await this.$axios
             .get(`empresa/?page=${ page }` )
             .then((response) => {
-              console.log(response.data);
               this.empresaResponse = Object.assign({}, response.data);
               this.items = Object.assign([], response.data.content);
             })
@@ -314,8 +313,6 @@ export default {
 
       return e;
     },
-
-
 
     cleanForm() {
       this.editMode = false;
